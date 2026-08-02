@@ -147,6 +147,7 @@ th{{background:#f5f5f5}} .ok{{color:#0a0;font-weight:bold}} .no{{color:#c00}}
 
     out_html = OUT_DIR / f"signal_report_{last.date()}.html"
     out_html.write_text(html, encoding="utf-8")
+    (OUT_DIR / "index.html").write_text(html, encoding="utf-8")   # 最新报告作为站点首页
 
     # ---- TXT ----
     lines = []
