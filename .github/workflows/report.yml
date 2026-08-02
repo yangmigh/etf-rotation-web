@@ -1,0 +1,47 @@
+﻿name: 每周信号报告 -> GitHub Pages
+
+on:
+  schedule:
+    - cron: "30 7 * * 5"      # 每周五 15:30 北京时间(UTC+8)
+  workflow_dispatch: {}       # 支持手动触发
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装中文字体(图表用)
+        run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+
+      - name: 尝试更新数据(失败则用仓库内数据)
+        run: |
+          python fetch_data.py --force || python fetch_data.py --nav-only || echo "行情更新失败,使用仓库内数据"
+          python fetch_irx.py || echo "美债更新失败,使用仓库内数据"
+
+      - name: 生成信号报告
+        run: python report.py
+
+      - name: 上传页面文件
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: reports
+
+      - name: 部署到 GitHub Pages
+        uses: actions/deploy-pages@v4
